@@ -28,3 +28,4 @@ echo "🧪 テスト実行例:"
 echo "   export API_URL=\$(aws cloudformation describe-stacks --stack-name lambda-hello --query 'Stacks[0].Outputs[?OutputKey==\`ApiUrl\`].OutputValue' --output text)"
 echo "   curl \$API_URL/health"
 
+
