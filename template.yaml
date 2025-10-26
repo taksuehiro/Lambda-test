@@ -1,49 +1,66 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
-Description: Lambda Hello - 最小構成の検証プロジェクト
+Description: Lambda Hello - TTCDX vendor-rag-VPC統合版
 
 Globals:
   Function:
-    Timeout: 10
-    MemorySize: 128
+    Timeout: 30
+    MemorySize: 256
+    Runtime: python3.11
+    Architectures:
+      - x86_64
+    Environment:
+      Variables:
+        ENV: "dev"
+        REGION: "ap-northeast-1"
 
 Resources:
+  # ------------------------------------------------------------
   # Lambda関数
+  # ------------------------------------------------------------
   HelloFunction:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: lambda-hello-function
+      Description: "Simple Lambda to verify handler and VPC routing"
       CodeUri: .
       Handler: app.lambda_handler
-      Runtime: python3.11
-      Architectures:
-        - x86_64
+      Role: arn:aws:iam::067717894185:role/vendor-lambda-role
+      VpcConfig:
+        SecurityGroupIds:
+          - sg-08ca394b24fee66cb             # lambda-rag-sg
+        SubnetIds:
+          - subnet-0391f4137c3be87d5         # PrivateA
+          - subnet-024c2179c0a534819         # PrivateC
       Events:
         # API Gateway HTTP API (v2)
+        ApiRoot:
+          Type: HttpApi
+          Properties:
+            Path: /
+            Method: GET
         HealthCheck:
           Type: HttpApi
           Properties:
             Path: /health
             Method: GET
-        Root:
-          Type: HttpApi
-          Properties:
-            Path: /
-            Method: GET
+
+  # ------------------------------------------------------------
+  # CloudWatch Logs (SAM自動作成により省略可能)
+  # ------------------------------------------------------------
 
 Outputs:
-  # API GatewayのエンドポイントURL
+  # API Gatewayエンドポイント
   ApiUrl:
     Description: "API Gateway endpoint URL"
     Value: !Sub "https://${ServerlessHttpApi}.execute-api.${AWS::Region}.amazonaws.com/"
-  
+
   # Lambda関数名
   FunctionName:
     Description: "Lambda Function Name"
     Value: !Ref HelloFunction
-  
-  # Lambda関数のARN
+
+  # Lambda関数ARN
   FunctionArn:
     Description: "Lambda Function ARN"
     Value: !GetAtt HelloFunction.Arn
-
