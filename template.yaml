@@ -1,0 +1,49 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Lambda Hello - 最小構成の検証プロジェクト
+
+Globals:
+  Function:
+    Timeout: 10
+    MemorySize: 128
+
+Resources:
+  # Lambda関数
+  HelloFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: lambda-hello-function
+      CodeUri: .
+      Handler: app.lambda_handler
+      Runtime: python3.11
+      Architectures:
+        - x86_64
+      Events:
+        # API Gateway HTTP API (v2)
+        HealthCheck:
+          Type: HttpApi
+          Properties:
+            Path: /health
+            Method: GET
+        Root:
+          Type: HttpApi
+          Properties:
+            Path: /
+            Method: GET
+
+Outputs:
+  # API GatewayのエンドポイントURL
+  ApiUrl:
+    Description: "API Gateway endpoint URL"
+    Value: !Sub "https://${ServerlessHttpApi}.execute-api.${AWS::Region}.amazonaws.com/"
+  
+  # Lambda関数名
+  FunctionName:
+    Description: "Lambda Function Name"
+    Value: !Ref HelloFunction
+  
+  # Lambda関数のARN
+  FunctionArn:
+    Description: "Lambda Function ARN"
+    Value: !GetAtt HelloFunction.Arn
+
